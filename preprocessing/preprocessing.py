@@ -11,14 +11,13 @@ import time
 from utils import *
 from robust_mean import loss
 
-import read_write_model
-import read_write_dense
+import colmap.read_write_model
 
 
-input_path = "../../data/horse_workspace/"
+input_path = "../../../data/horse_workspace/"
 input_format = ".txt"
 
-cameras, images, points3D = read_write_model.read_model(path=input_path,
+cameras, images, points3D = colmap.read_write_model.read_model(path=input_path,
                                                         ext=input_format)
 
 
