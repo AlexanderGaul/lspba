@@ -23,17 +23,14 @@ cameras, images, points3D = colmap.read_write_model.read_model(path=input_path,
 
 dense_cloud = o3d.io.read_point_cloud(input_path + "dense/0/fused.ply")
 dense_cloud.normalize_normals()
-
 mesh = o3d.io.read_triangle_mesh(input_path + "dense/0/meshed-poisson.ply")
 
 points = np.array(dense_cloud.points)
 normals = np.array(dense_cloud.normals)
 colors = np.array(dense_cloud.colors)
 
-# TODO: get correct number of 
+# TODO: determine correct number of cameras from
 camera_dicts = np.array([get_camera_parameters(cameras[idx], images[idx]) for idx in range(1, 149)])
-
-
 
 vis = o3d.visualization.Visualizer()
 vis.create_window(width=1920, height=1080, visible=False)
@@ -45,7 +42,7 @@ images = [Image.open(input_path + "images/" + '0' * (5 - len(str(i))) + str(i) +
 depth_images = []
 
 for camera in camera_dicts :
-    set_camera_parameters(vis, camera)
+    set_visualizer_camera_parameters(vis, camera)
     depth_images.append(vis.capture_depth_float_buffer())
 
 
@@ -63,7 +60,7 @@ else :
 
     for i, camera in enumerate(camera_dicts) :
         print("Camera " + str(i))
-        x_image, _, X_C = full_project_all(points, camera, False)
+        x_image, _, X_C = project_steps(points, camera, False)
         point_selector = np.logical_and(
                              np.logical_and(x_image[:, 0] >= 0+margin, x_image[:, 1] >= 0+margin),
                              np.logical_and(x_image[:, 0] < 1920+margin, x_image[:, 1] < 1080+margin))
@@ -130,7 +127,7 @@ visibility_idx = np.argwhere(visibility_matrix[:batch_size, :])
 
 grids = create_grids(points[:batch_size], normals[:batch_size], scales)
 
-grids_I, _, _, _ = full_project_all_batch(grids[visibility_idx[:, 0]].reshape(-1, 16, 3), camera_dicts[visibility_idx[:, 1]], True)
+grids_I, _, _, _ = project_separate_steps(grids[visibility_idx[:, 0]].reshape(-1, 16, 3), camera_dicts[visibility_idx[:, 1]], True)
 
 
 
