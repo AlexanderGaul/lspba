@@ -38,8 +38,26 @@ def get_camera_parameters(camera_data, image_data) :
 def distort_simple_radial(xys, k_1) :
     r = np.linalg.norm(xys, axis=1)
     return xys * (1 + k_1 * r * r)[:, np.newaxis]
-    
 
+def undistort_simple_radial(xys, k_1) :
+    r = np.linalg.norm(xys, axis=1)
+    b_1 = -k_1
+    b_2 = 3 * k_1**2
+    b_3 = -12 * k_1**3
+    b_4 = 55 * k_1**4
+    b_5 = -273 * k_1**5
+    b_6 = 1428 * k_1**6
+    b_7 = -7752 * k_1**7
+    b_8 = 43263 * k_1**8
+    b_9 = -246675 * k_1**9
+    bs = [b_1, b_2, b_3, b_4, b_5, b_6, b_7, b_8, b_9]
+    rsq = r**2
+    rpow = rsq
+    Q = 1
+    for b in bs :
+        Q = Q + b * rpow
+        rpow = rpow * rsq
+    return xys * Q.reshape(-1, 1)
 
 def get_grid_directions(points, normals) :
     horizontal = np.zeros(normals.shape)
