@@ -42,8 +42,8 @@ def plot_patches(patches_stack, robust_mean, median, mean, view_idxs=None) :
     closest = np.argmin(np.linalg.norm(patches_stack - robust_mean.reshape(-1, 16), axis=1))
     # TODO: find closest
     
-    plot_height = int(max(2, np.sqrt(num_images) + 1)) + 1
-    plot_width = int(max(4, np.ceil(num_images / plot_height)))
+    plot_height = int(max(2, np.sqrt(num_images) + 1))
+    plot_width = int(max(4, np.ceil(num_images / (plot_height - 1))))
     current_plot = 1
     
     fig = plt.figure()

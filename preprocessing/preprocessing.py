@@ -198,7 +198,7 @@ for batch_idx in range(int(np.ceil(len(points) / batch_size))) :
 
 
     plot_idx = 10
-    for plot_idx in [0, 10, 20, 30, 45] :
+    for plot_idx in [100, 200, 300, 400, 500] :
         visualization.plot_grids(grids_I[visibility_idx[:, 0] == plot_idx, :, :],
                                  visibility_idx[visibility_idx[:, 0] == plot_idx, 1], 
                                  np.array([np.array(image) for image in images]))
