@@ -40,6 +40,7 @@ def distort_simple_radial(xys, k_1) :
     return xys * (1 + k_1 * r * r).reshape(-1, 1)
 
 
+# TODO: include second parameter
 def undistort_simple_radial(xys, k_1) :
     r = np.linalg.norm(xys, axis=1)
     b_1 = -k_1
@@ -299,10 +300,38 @@ def optimize_grid_spacing_multiple(points, normals, poses, camera_parameters, vi
     return grid_scale, grid_directions, grid_outer
 
 
-    
-    
+# TODO make this into proper code
+# TDOO: are we actually using this??
+def read_float_from_file(file) :
+  file.readline()
+  return float(file.readline().split("\t")[0])
+  
+def read_int_from_file(file) :
+  file.readline()
+  return int(file.readline().split("\t")[0])
 
 
+def get_centers_directions(poses) :
+    z = poses[:, 2, :3]
+    y = poses[:, 1, :3]
+    x = poses[:, 0, :3]
+    points = -poses[:, :3, :3].transpose(0, 2, 1) @ poses[:, :3, [3]]
+    return points.reshape(-1, 3), x, y, z
+
+
+def get_views_center(poses) :
+    points, _, _, directions = get_centers_directions(poses)
+    cross = np.cross(points, directions)
+    A = preprocessing.normalize(np.cross(cross, directions), axis=1)
+    b = (A * points).sum(axis=1) 
+    p = np.linalg.inv(A.T.dot(A)).dot(A.T).dot(b)
+    return p
+
+
+def get_plane(points, normals) :
+    n = normals / normals[:, [2]]
+    d = (n * points).sum(axis=1)
+    return n / d.reshape(-1, 1)
 
 
 """
