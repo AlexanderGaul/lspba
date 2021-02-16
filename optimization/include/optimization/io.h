@@ -93,7 +93,7 @@ bool read_points_normals_gridscales(std::filesystem::path path,
 }
 
 bool read_visibility(std::filesystem::path path,
-                     std::vector<std::vector<long>>& visibility) {
+                     std::vector<std::vector<int>>& visibility) {
     std::ifstream file;
     file.open(path, std::ios::in | std::ios::binary);
     if (!file.is_open() || file.fail()) {
@@ -101,9 +101,9 @@ bool read_visibility(std::filesystem::path path,
         std::cerr << "Could not open file stream " << path << std::endl;
         return false;
     }
-    long current_point = -1;
-    long point_idx;
-    long view_idx;
+    int current_point = -1;
+    int point_idx;
+    int view_idx;
     while (file >> point_idx && file >> view_idx) {
         for (; current_point < point_idx; current_point++) {
             visibility.emplace_back();
@@ -145,7 +145,7 @@ bool read_landmarks(std::filesystem::path path,
 }
 
 bool read_source_frame(std::filesystem::path path, 
-                       std::vector<long>& source_idx) {
+                       std::vector<int>& source_idx) {
     std::ifstream grid_file;
     grid_file.open(path, std::ios::in | std::ios::binary);
     if (!grid_file.is_open() || grid_file.fail()) {
@@ -153,7 +153,7 @@ bool read_source_frame(std::filesystem::path path,
         std::cerr << "Could not open file stream " << path << std::endl;
         return false;
     }
-    long index;
+    int index;
     while (grid_file >> index) {
         source_idx.push_back(index);
     }

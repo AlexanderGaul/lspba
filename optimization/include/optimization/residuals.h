@@ -46,6 +46,7 @@ struct PatchResidual {
         Eigen::Map<Eigen::Matrix<T, 6, 1> const> intrinsics_i(scamera_i);
         Eigen::Map<Eigen::Matrix<T, 6, 1> const> intrinsics_j(scamera_j);
         
+        /* TODO how to use map here?? */
         std::shared_ptr<RadialCamera<T>> camera_i(new RadialCamera<T>(intrinsics_i));
         std::shared_ptr<RadialCamera<T>> camera_j(new RadialCamera<T>(intrinsics_j));
         
