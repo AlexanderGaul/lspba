@@ -110,7 +110,8 @@ int main() {
         }
         for (int v = 0; v < visibility[point_idx].size(); v++) {
             int view_idx = visibility[point_idx][v];
-            std::array<Eigen::Vector2d, 16> p2d; 
+            std::array<Eigen::Vector2d, 16> p2d;
+            // Project grid into view
             for (int i = 0; i < 16; i++) {
                 p2d[i] = camera.project(poses[view_idx] * grids[point_idx][i]);
             }
@@ -123,6 +124,7 @@ int main() {
                 mean += patch[i];
             }
             mean /= 16;
+            // Normalize patch
             for (int i = 0; i < 16; i++) {
                 patch[i] -= mean;
                 std += patch[i] * patch[i];
@@ -135,6 +137,7 @@ int main() {
             patches.push_back(patch);
         }
         
+        // Initialize mu with mean patch
         std::array<double, 16> mu;
         for (int i = 0; i < 16; i++) {
             mean_patch[i] /= visibility[0].size();
@@ -148,12 +151,10 @@ int main() {
             problem.AddResidualBlock(cost, new Rho(), &(mu[0]));
         }
         
-        //ceres::Solver::Options::dogleg_type
         ceres::Solver::Options options;
-        /* TODO: linear solver */
         options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
-        options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
-        //options.dogleg_type = ceres::SUBSPACE_DOGLEG;
+        options.trust_region_strategy_type = ceres::DOGLEG;
+        options.dogleg_type = ceres::TRADITIONAL_DOGLEG;
         
         options.logging_type = ceres::SILENT;
         options.minimizer_progress_to_stdout = false;

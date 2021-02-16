@@ -8,7 +8,7 @@
 
 #include <optimization/camera.h>
 
-// TODO: hard code patch size??
+// Cost Functor for Robust Mean
 struct DifferenceCostFunctor {
     DifferenceCostFunctor(double* patch) : patch(patch) {}
     template <typename T>
@@ -87,6 +87,7 @@ struct PatchResidual {
     ceres::BiCubicInterpolator<ceres::Grid2D<double, 1>>* interpolator;
 };
 
+// Robust Loss
 class Rho : public ceres::LossFunction {
 public:
     Rho(double tau=0.5) : tau_(tau) {}
