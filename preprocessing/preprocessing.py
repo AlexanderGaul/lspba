@@ -52,7 +52,7 @@ np.savetxt(pose_path, np.concatenate([poses[:, :3, :3].reshape(-1, 9),
 
 
 # TODO: when to visualize
-show_viewer = True
+show_viewer = False
 if show_viewer :
     p = get_views_center(poses)
     print(p)
@@ -199,6 +199,9 @@ images_interp = interpolate.RegularGridInterpolator((np.arange(0, len(images), 1
                                                     bounds_error=False, fill_value=None)
 
 batch_size = 10000
+landmarks_found = 0
+
+# TODO: batch index to continue
 
 for batch_idx in range(int(np.ceil(len(points) / batch_size))) :
     batch_begin = batch_idx*batch_size
@@ -226,6 +229,7 @@ for batch_idx in range(int(np.ceil(len(points) / batch_size))) :
     
     # Normalize patches
     mu = patch_stack.mean(axis=1).reshape(-1, 1)
+    # TODO: discard invalid sigmas right here
     sigma = np.linalg.norm(patch_stack - mu, axis=1).reshape(-1, 1)
     patch_stack = (patch_stack - mu) / sigma
     
@@ -234,43 +238,44 @@ for batch_idx in range(int(np.ceil(len(points) / batch_size))) :
     patch_stack = patch_stack[valid_patch, :]
     grids_I = grids_I[valid_patch, :]
     
-    visibility_matrix_local = visibility_matrix[batch_begin:batch_end, :]
-    visibility_idx = np.argwhere(visibility_matrix_local)
-    visibility_matrix_local[visibility_idx[:, 0], visibility_idx[:, 1]] = valid_patch
-    visibility_idx = np.argwhere(visibility_matrix_local)
+    visibility_matrix_batch = visibility_matrix[batch_begin:batch_end, :]
+    visibility_idx = np.argwhere(visibility_matrix_batch)
+    visibility_matrix_batch[visibility_idx[:, 0], visibility_idx[:, 1]] = valid_patch
+    visibility_idx = np.argwhere(visibility_matrix_batch)
     # TODO how do landmark indices change here if at all # indx_local = indx_visible[batch_begin:batch_end][]
 
-    
+    secs = time.time()
     patch_fulls = [scipy.sparse.csr_matrix((patch_stack[:, i] , (visibility_idx[:, 0], visibility_idx[:, 1]))) for i in range(16)]
-    patch_mean = np.zeros([visibility_matrix_local.shape[0], 16])
+    patch_mean = np.zeros([visibility_matrix_batch.shape[0], 16])
     for i, patch_full in enumerate(patch_fulls) :
-        patch_mean[:, i] = (np.asarray(patch_full.sum(axis=1)).reshape(-1) / visibility_matrix_local.sum(axis=1))
+        patch_mean[:, i] = (np.asarray(patch_full.sum(axis=1)).reshape(-1) / visibility_matrix_batch.sum(axis=1))
     
-    patch_full = np.zeros([visibility_matrix_local.shape[0], len(poses), 16])
+    patch_full = np.zeros([visibility_matrix_batch.shape[0], len(poses), 16])
     patch_full[:] = np.nan
     patch_full[visibility_idx[:, 0], visibility_idx[:, 1], :] = patch_stack
     patch_median = np.nanmedian(patch_full, axis=1)
 
     robust_mean = np.zeros(patch_mean.shape)
     
-    secs = time.time()
+    
     for i in range(len(patch_mean)) :
         result = scipy.optimize.least_squares(f, x0=patch_mean[i, :], jac=jac, 
                                 loss=loss, args=(patch_stack[visibility_idx[:,0]==i, :].reshape(1, -1, 16)),
-                                method='dogbox', ftol=1e-4, xtol=1e-4, gtol=1e-4) #, tr_solver='lsmr', verbose=0)
+                                method='dogbox', ftol=1e-4, xtol=1e-4, gtol=1e-4, verbose=0) #, tr_solver='lsmr', verbose=0)
         robust_mean[i] = result.x
         
     print("Optimize robust mean: " + str(time.time() - secs))
     
     # Determine valid landmarks that are visible
-    valid_points = visibility_matrix_local.sum(axis=1) > 0
+    valid_points = visibility_matrix_batch.sum(axis=1) > 0
     
     # Determine source views
     distances = np.linalg.norm(patch_stack - robust_mean[visibility_idx[:, 0], :].reshape(-1, 16), axis=1)
-    D = scipy.sparse.csr_matrix((-distances, (visibility_idx[:, 0], visibility_idx[:, 1])))
-    source_idx = D.argmax(axis=1)[valid_points]
+    D = scipy.sparse.csr_matrix((-(distances-distances.max()), (visibility_idx[:, 0], visibility_idx[:, 1])))
+    source_idx = np.asarray(D.argmax(axis=1)[valid_points]).reshape(-1)
     
     # TODO: Determine landmarks that have source patches with sufficient texture
+    
     
     
     # Append batch results to files
@@ -280,17 +285,28 @@ for batch_idx in range(int(np.ceil(len(points) / batch_size))) :
         np.savetxt(file, np.concatenate([points[batch_begin:batch_end, :][valid_points, :], 
                                       normals[batch_begin:batch_end, :][valid_points, :], 
                                       scales.reshape(-1, 1)[valid_points, :]], axis=1))
-
+    
+    ### TODO: remove source index from visibility indices
+    ### TODO: shift indices according to previously determined landmarks
+    ### TODO: truncate matrix
+    visibility_matrix_batch_valid = visibility_matrix_batch[valid_points, :]
+    visibility_idx = np.argwhere(visibility_matrix_batch_valid)
     with open(os.path.join(input_path, "visibility.txt"), 
               "w" if batch_idx == 0 else "a") as file :
-        np.savetxt(file, visibility_idx, '%d')
+        np.savetxt(file, visibility_idx + np.array([landmarks_found, 0]), '%d')
     
     # Compute landmarks
-    n = get_plane(points[batch_begin:batch_end, :][valid_points, :], normals[batch_begin:batch_end, :][valid_points, :])
+    points_C = points[batch_begin:batch_end, :][valid_points, :].reshape(-1, 1, 3) \
+             @ poses[source_idx, :3, :3].transpose(0, 2, 1) + \
+               poses[source_idx, :3, 3].reshape(-1, 1, 3)
+    normals_C = normals[batch_begin:batch_end, :][valid_points, :].reshape(-1, 1, 3) @ poses[source_idx, :3, :3].transpose(0, 2, 1)
+    n = get_plane(points_C.reshape(-1, 3), 
+                  normals_C.reshape(-1, 3))
+
     x, _, _, _ = project_separate_steps(points[batch_begin:batch_end, :][valid_points, :], 
                                         poses[source_idx, :], 
                                         intrinsics, distortion)
-    
+
     with open(os.path.join(input_path, "landmarks.txt"), 
               "w" if batch_idx == 0 else "a") as file :
         np.savetxt(file, np.concatenate([x, n], axis=1))
@@ -299,10 +315,16 @@ for batch_idx in range(int(np.ceil(len(points) / batch_size))) :
               "w" if batch_idx == 0 else "a") as file :
         np.savetxt(file, source_idx, '%d')
     
+    landmarks_found += valid_points.sum()
+    
+    print("Results for batch " + str(batch_idx) + " written")
+    
+    # TODO: print runtime for whole batch
+    
     
     if False :
         plot_idx = 10
-        idxs = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000]
+        idxs = [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000]
         for landmark_idx in idxs :
             print(landmark_idx)
             if not (indx_visible == landmark_idx).any() :
