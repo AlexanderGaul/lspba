@@ -6,30 +6,19 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-#find_package(Eigen3 3.3.8 REQUIRED)
 
-#list(APPEND GLOG_INCLUDE_DIR_HINTS "/usr/include")
-#get_filename_component(CERES_BUILD_GLOG_LIBRARY_DIR "/usr/lib/libglog.so" PATH)
-#list(APPEND GLOG_LIBRARY_DIR_HINTS ${CERES_BUILD_GLOG_LIBRARY_DIR})
+set(CMAKE_CXX_FLAGS_DEBUG  "-O0 -ggdb -g -DEIGEN_INITIALIZE_MATRICES_BY_NAN")      
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
-# Search quietly s/t we control the timing of the error message if not found.
-# PATHS "/usr/lib/cmake/Ceres/")
 
 find_package(Ceres 2.0.0 REQUIRED)
 
-find_package(Glog REQUIRED PATHS "/home/alexander/Documents/studies/20_ws/idp/code/libraries/glog/")
-set(GLOG_INCLUDE_DIR ${GLOG_INCLUDE_DIR})
-include_directories(${GLOG_INCLUDE_DIR})
-
-#find_package(gflags REQUIRED)
-
-find_package(Sophus REQUIRED PATHS "/home/alexander/Software/Sophus/build/")
+find_package(Sophus REQUIRED PATHS "/home/alexander/Documents/studies/20_ws/idp/code/libraries/Sophus/sophus/build")
 message( STATUS "Sophus include directories: ${Sophus_INCLUDE_DIRS}" )
 message( STATUS "Sophus library directories: ${Sophus_LIBRARY_DIR}" )
 message(STATUS "${Sophus_LIBRARIES}")
-include_directories("/home/alexander/Software/Sophus/")
+include_directories("/home/alexander/Documents/studies/20_ws/idp/code/libraries/Sophus/")
 
-#find_package(glog REQUIRED CONFIG NAMES google-glog glog)
 
 include_directories("${CMAKE_SOURCE_DIR}/include")
 message( STATUS "Include directories: ${CMAKE_SOURCE_DIR}/include" )
@@ -44,16 +33,20 @@ message( STATUS "OpenCV library directories: ${OpenCV_LIBRARY_DIR}" )
 MESSAGE(STATUS "Include dirs ${OpenCV_INCLUDE_DIRS}")
 MESSAGE(STATUS "LINK LIBRARIES ${OpenCV_LIBRARIES}")
 
-set(EIGEN3_INCLUDE_DIR_HINTS ${EIGEN_ROOT})  # for opengv / pangolin
-find_package(Eigen3 3.3.8 REQUIRED) # find eigen with our adapted "config module", that uses our eigen source tree
-set(EIGEN_INCLUDE_DIR ${EIGEN3_INCLUDE_DIR})  # for opengv / pangolin
+set(EIGEN3_INCLUDE_DIR_HINTS ${EIGEN_ROOT})
+find_package(Eigen3 3.3.8 REQUIRED)
+set(EIGEN_INCLUDE_DIR ${EIGEN3_INCLUDE_DIR})
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-# Search quietly s/t we control the timing of the error message if not found.
-#find_package(Glog REQUIRED PATHS "/home/alexander/Software/ceres-solver/src/ceres-solver-2.0.0/cmake/")
+find_package(Open3D REQUIRED)
+include_directories(SYSTEM ${Open3D_INCLUDE_DIRS})
+link_directories(${Open3D_LIBRARY_DIRS})
+message( STATUS "Open3D include directories: ${Open3D_INCLUDE_DIRS}" )
+message( STATUS "Open3D library directories: ${Open3D_LIBRARY_DIRS}" )
 
-add_executable(robust_mean main.cpp)
-target_link_libraries(robust_mean ${CERES_LIBRARIES} glog::glog ${Sophus_LIBRARIES} ${EIGEN_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(robust_mean robust_mean.cpp)
+target_link_libraries(robust_mean ${CERES_LIBRARIES} ${Sophus_LIBRARIES} ${EIGEN_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(levenberg_marquardt lm.cpp)
-target_link_libraries(levenberg_marquardt ${CERES_LIBRARIES} glog::glog ${Sophus_LIBRARIES} ${EIGEN_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(levenberg_marquardt Ceres::ceres ${Eigen_LIBRARIES} ${Sophus_LIBRARIES} ${EIGEN_LIBRARIES} ${OpenCV_LIBRARIES})
+

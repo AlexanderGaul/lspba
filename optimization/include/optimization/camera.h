@@ -23,7 +23,7 @@ class RadialCamera {
         res[1] = p[1] / p[2];
 
         Scalar r = res.norm();
-        Scalar distortion = 1 + r * r * (param[4] + r * r * (param[5]));
+        Scalar distortion = 1. + r * r * (param[4] + r * r * (param[5]));
         res[0] = distortion * res[0];
         res[1] = distortion * res[1];
 
@@ -40,20 +40,21 @@ class RadialCamera {
         uncalibrated[1] = 1. / param[1] * (p[1] - param[3]);
         
         Scalar b1 = - param[4];
-        Scalar b2 = 3 * param[4] * param[4] - param[5];
-        Scalar b3 = - 12 * param[4] * param[4] * param[4] + 
-                    8 * param[4] * param[5];
-        Scalar b4 = 55 * param[4] * param[4] * param[4] * param[4] - 
-                    55 * param[4] * param[4] * param[5] + 
-                    5 * param[5] * param[5];
-        Scalar b5 = -273 * param[4] * param[4] * param[4] * param[4] * param[4] + 
-                    364 * param[4] * param[4] * param[4] * param[4] - 
-                    78 * param[4] * param[5] * param[5];
-        Scalar b6 = 1428 * param[4] * param[4] * param[4] * param[4] * param[4] * param[4] - 
-                    2380 * param[4] * param[4] * param[4] * param[4] * param[5] + 
-                    840 * param[4] * param[4] * param[5] * param[5] - 
-                    35 * param[5] * param[5];
-                
+        Scalar b2 = 3. * param[4] * param[4] - param[5];
+        Scalar b3 = - 12. * param[4] * param[4] * param[4] + 
+                    8. * param[4] * param[5];
+        /*
+        Scalar b4 = 55. * param[4] * param[4] * param[4] * param[4] - 
+                    55. * param[4] * param[4] * param[5] + 
+                    5. * param[5] * param[5];
+        Scalar b5 = -273. * param[4] * param[4] * param[4] * param[4] * param[4] + 
+                    364. * param[4] * param[4] * param[4] * param[4] - 
+                    78. * param[4] * param[5] * param[5];
+        Scalar b6 = 1428. * param[4] * param[4] * param[4] * param[4] * param[4] * param[4] - 
+                    2380. * param[4] * param[4] * param[4] * param[4] * param[5] + 
+                    840. * param[4] * param[4] * param[5] * param[5] - 
+                    35. * param[5] * param[5];
+                */
         Scalar r = uncalibrated.norm();
         Scalar r2 = r * r;
         Scalar r4 = r2 * r2;
@@ -62,13 +63,15 @@ class RadialCamera {
         Scalar r10 = r8 * r2;
         Scalar r12 = r10 * r2;
         
-        Scalar Q = 1 + b1 * r2 + b2 * r4 + b3 * r6 + b4 * r8 + b5 * r10 + b6 * r12;
+        Scalar Q = 1. + b1 * r2 + b2 * r4 + b3 * r6; // + b4 * r8 + b5 * r10 + b6 * r12;
         
         res[0] = uncalibrated[0] * Q;
         res[1] = uncalibrated[1] * Q;
-        res[2] = 1;
+        res[2] = Scalar(1.);
         return res;
     }
+    
+    
     
   private:
     VecN param;
