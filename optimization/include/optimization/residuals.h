@@ -59,9 +59,12 @@ struct PatchResidual {
             patch_j_centered[i] = patch_j[i] - mu;
         }
         Eigen::Matrix<T, 16, 1> patch_j_normalized = patch_j_centered.normalized();
+        /*
         for (int i = 0; i < 16; i++) {
             sresidual[i] = patch_j_normalized[i] - source_patch[i];
         }
+        */
+        sresidual[0] = (patch_j_normalized - source_patch).norm();
         return true;
     }
 

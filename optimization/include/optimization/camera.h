@@ -55,6 +55,7 @@ class RadialCamera {
                     840. * param[4] * param[4] * param[5] * param[5] - 
                     35. * param[5] * param[5];
                 */
+        
         Scalar r = uncalibrated.norm();
         Scalar r2 = r * r;
         Scalar r4 = r2 * r2;

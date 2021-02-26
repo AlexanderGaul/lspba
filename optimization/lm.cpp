@@ -5,8 +5,10 @@
 
 #include <ceres/ceres.h>
 #include <ceres/cubic_interpolation.h>
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
+#include <opencv2/core/core.hpp>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/imgcodecs.hpp>
 
@@ -14,8 +16,12 @@
 
 #include <filesystem>
 #include <fstream>
-
 #include <chrono>
+
+
+#include <open3d/visualization/visualizer/Visualizer.h>
+#include <open3d/geometry/PointCloud.h>
+#include <open3d/Open3D.h>
 
 #include <optimization/io.h>
 #include <optimization/camera.h>
@@ -44,13 +50,23 @@ int main() {
     std::vector<Eigen::Vector3d> normals;
     std::vector<double> scales;
     
-    
     read_camera_parameters(camera_path, camera_param);
     read_poses(pose_path, poses);
     read_landmarks(landmark_path, pixels, planes);
     read_source_frame(source_path, source_views);
     read_visibility(visibility_path, visibilities);
     read_points_normals_gridscales(points3d_path, points_3D, normals, scales);
+    
+    
+    open3d::visualization::Visualizer vis;
+    vis.CreateVisualizerWindow();
+    std::shared_ptr<open3d::geometry::PointCloud> cloud{
+        new open3d::geometry::PointCloud(points_3D)};
+    vis.AddGeometry(cloud);
+    vis.Run();
+    
+    
+    
     
     int observations = 0;
     for (int i = 0; i < visibilities.size(); i++) {
@@ -66,13 +82,19 @@ int main() {
     
     // Read images
     for (int i = 0; i < poses.size(); i++) {
+        std::cout << i << std::endl;
         cv::Mat img{cv::imread((image_path / 
                                   (std::string((5 - std::to_string(i+1).length()), '0') +
                                   std::to_string(i+1)  + ".jpg")), cv::IMREAD_GRAYSCALE)};
+        std::cout << "read" << std::endl;
         cv::Mat image;
         img.convertTo(image, CV_64F);
+        std::cout << "converted" << std::endl;
         images.push_back(image);
-        
+        cv::imshow("hi", img);
+        cv::waitKey(0);
+        //std::cout << image.data << std::endl;
+        //std::cout << images[i].data << std::endl;
         grids.push_back(ceres::Grid2D<double>((double*)(images[i].data), 0, 1080, 0, 1920));
     }
     for (int i = 0; i < poses.size(); i++)  {
@@ -114,11 +136,11 @@ int main() {
         pose_added.push_back(false);
     }
     
-    for (int l = 0; l < 10000; l++) {
+    for (int l = 0; l < pixels.size(); l++) {
         for (int v = 0; v < visibilities[l].size(); v++) {
             if (visibilities[l][v] == source_views[l]) continue;
             ceres::CostFunction* cost =
-                new ceres::AutoDiffCostFunction<PatchResidual, 16, 
+                new ceres::AutoDiffCostFunction<PatchResidual, 1, 
                                                 Sophus::SE3d::num_parameters, 
                                                 Sophus::SE3d::num_parameters,
                                                 6,  
@@ -152,12 +174,25 @@ int main() {
     options.minimizer_progress_to_stdout = true;
     options.use_explicit_schur_complement = false;
     options.num_threads = 4;
+    options.max_num_iterations = 5;
 
     ceres::Solver::Summary summary;
     
     Solve(options, &problem, &summary);
     
     std::cout << summary.FullReport() << std::endl;
+    
+    std::cout << camera_param << std::endl;
+    RadialCamera<double> camera_optimized(camera_param);
+    
+    std::vector<Eigen::Vector3d> points_optimized;
+    for (int i = 0; i < pixels.size(); i++) {
+        Eigen::Vector3d X = unproject(pixels[i], planes[i], camera_optimized, poses[source_views[i]]);
+        points_optimized.push_back(X);
+    }
+    
+    
+    /* TODO: store results somewhere */
 }
 
 
