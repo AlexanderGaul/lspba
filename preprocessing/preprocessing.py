@@ -22,11 +22,11 @@ input_path = "../../../data/horse_workspace/"
 input_format = ".txt"
 
 model_cameras, model_images, _ = \
-    colmap.read_write_model.read_model(path=input_path, ext=input_format)
+    colmap.read_write_model.read_model(path=input_path+"colmap/", ext=input_format)
 
-dense_cloud = o3d.io.read_point_cloud(input_path + "dense/0/fused.ply")
+dense_cloud = o3d.io.read_point_cloud(input_path + "colmap/dense/0/fused.ply")
 dense_cloud.normalize_normals()
-mesh = o3d.io.read_triangle_mesh(input_path + "dense/0/meshed-poisson.ply")
+mesh = o3d.io.read_triangle_mesh(input_path + "colmap/dense/0/meshed-poisson.ply")
 
 points = np.array(dense_cloud.points)
 normals = np.array(dense_cloud.normals)
