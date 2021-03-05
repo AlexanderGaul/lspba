@@ -42,11 +42,11 @@ width, height = camera_parameters['resolution']
 
 
 # save poses and camera intrinsics
-camera_path = os.path.join(input_path, "camera" + ".txt")
+camera_path = os.path.join(input_path, "preprocessing/camera.txt")
 np.savetxt(camera_path, np.array([intrinsics[0, 0], intrinsics[1, 1], 
                                  intrinsics[0, 2], intrinsics[1, 2],
                                  distortion, 0]).reshape(1, -1))
-pose_path = os.path.join(input_path, "poses" + ".txt")
+pose_path = os.path.join(input_path, "preprocessing/poses.txt")
 np.savetxt(pose_path, np.concatenate([poses[:, :3, :3].reshape(-1, 9), 
                                       poses[:, :3, 3].reshape(-1, 3)], axis=1))
 
@@ -280,7 +280,7 @@ for batch_idx in range(int(np.ceil(len(points) / batch_size))) :
     
     # Append batch results to files
     
-    with open(os.path.join(input_path, "points_normals_gridscales_select.txt"), 
+    with open(os.path.join(input_path, "preprocessing/points_normals_gridscales_select.txt"), 
               "w" if batch_idx == 0 else "a") as file:
         np.savetxt(file, np.concatenate([points[batch_begin:batch_end, :][valid_points, :], 
                                       normals[batch_begin:batch_end, :][valid_points, :], 
@@ -291,7 +291,7 @@ for batch_idx in range(int(np.ceil(len(points) / batch_size))) :
     ### TODO: truncate matrix
     visibility_matrix_batch_valid = visibility_matrix_batch[valid_points, :]
     visibility_idx = np.argwhere(visibility_matrix_batch_valid)
-    with open(os.path.join(input_path, "visibility.txt"), 
+    with open(os.path.join(input_path, "preprocessing/visibility.txt"), 
               "w" if batch_idx == 0 else "a") as file :
         np.savetxt(file, visibility_idx + np.array([landmarks_found, 0]), '%d')
     
@@ -307,11 +307,11 @@ for batch_idx in range(int(np.ceil(len(points) / batch_size))) :
                                         poses[source_idx, :], 
                                         intrinsics, distortion)
 
-    with open(os.path.join(input_path, "landmarks.txt"), 
+    with open(os.path.join(input_path, "preprocessing/landmarks.txt"), 
               "w" if batch_idx == 0 else "a") as file :
         np.savetxt(file, np.concatenate([x, n], axis=1))
     
-    with open(os.path.join(input_path, "source_views.txt"), 
+    with open(os.path.join(input_path, "preprocessing/source_views.txt"), 
               "w" if batch_idx == 0 else "a") as file :
         np.savetxt(file, source_idx, '%d')
     
