@@ -48,7 +48,7 @@ struct PatchResidual {
         
         Eigen::Matrix<T, 16, 1> patch_j;
         for (int i = 0; i < 16; i++) {
-            interpolator->Evaluate(x_j.col(i)[1], x_j.col(i)[0], &patch_j[i]);
+            interpolator->Evaluate(x_j.col(i)[1] * T(scale), x_j.col(i)[0] * T(scale), &patch_j[i]);
         }
         T mu = T(0);
         for (int i = 0; i < 16; i++) {
@@ -59,19 +59,15 @@ struct PatchResidual {
             patch_j_centered[i] = patch_j[i] - mu;
         }
         Eigen::Matrix<T, 16, 1> patch_j_normalized = patch_j_centered.normalized();
-        /*
+
         for (int i = 0; i < 16; i++) {
             sresidual[i] = patch_j_normalized[i] - source_patch[i];
         }
-        */
-        sresidual[0] = (patch_j_normalized - source_patch).norm();
         return true;
     }
-
-    
+    double scale = 0.5;
     Eigen::Map<Eigen::Matrix<double, 16, 1>> source_patch;
     Eigen::Map<Eigen::Matrix<double, 2, 16>> source_pixels;
-    /* TODO: should this be pointers */
     ceres::BiCubicInterpolator<ceres::Grid2D<double, 1>>* interpolator;
 };
 
