@@ -21,6 +21,18 @@ struct DifferenceCostFunctor {
     double* patch;
 };
 
+struct DistanceCostFunctor {
+    DistanceCostFunctor(double distance) : distance(distance) {}
+    template <typename T>
+    bool operator() (const T* const spose_1, const T* const spose_2, T* residual) const {
+        Eigen::Map<Sophus::SE3<T> const> const pose_1{spose_1};
+        Eigen::Map<Sophus::SE3<T> const> const pose_2{spose_2};
+        residual[0] = (pose_1.translation() - pose_2.translation()).norm() - distance;
+        return true;
+    }
+    double distance;
+};
+
 struct PatchResidual {
     PatchResidual(double* source_patch, double* source_pixels, 
                   ceres::BiCubicInterpolator<ceres::Grid2D<double, 1>>* interpolator) : 
