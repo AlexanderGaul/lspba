@@ -1,28 +1,17 @@
 #include <iostream>
-#include <sstream> 
 #include <string>
-#include <iterator>
+#include <vector>
+#include <chrono>
 
+#include <eigen3/Eigen/Dense>
 #include <ceres/ceres.h>
-#include <ceres/cubic_interpolation.h>
-
 #include <opencv2/opencv.hpp>
-#include <opencv2/core.hpp>
-#include <opencv2/core/core.hpp>
-#include <opencv2/core/mat.hpp>
-#include <opencv2/imgcodecs.hpp>
+#include <open3d/Open3D.h>
 
 #include <sophus/se3.hpp>
 
-#include <filesystem>
-#include <fstream>
-#include <chrono>
 
-
-#include <open3d/visualization/visualizer/Visualizer.h>
-#include <open3d/geometry/PointCloud.h>
-#include <open3d/Open3D.h>
-
+#include <optimization/loader.h>
 #include <optimization/io.h>
 #include <optimization/camera.h>
 #include <optimization/residuals.h>
