@@ -6,12 +6,11 @@
 #include <string>
 #include <iterator>
 #include <optimization/camera.h>
-#include <filesystem>
 #include <fstream>
 #include <sophus/se3.hpp>
 #include <ceres/ceres.h>
 
-bool read_camera_parameters(std::filesystem::path path, RadialCamera<double>::VecN& param) {
+bool read_camera_parameters(std::string path, RadialCamera<double>::VecN& param) {
     std::ifstream file;
     file.open(path, std::ios::in | std::ios::binary);
     if (!file.is_open() || file.fail()) {
@@ -32,7 +31,7 @@ bool read_camera_parameters(std::filesystem::path path, RadialCamera<double>::Ve
 }
 
 /* TODO: what datatype to use exactly*/
-bool read_poses(std::filesystem::path path, std::vector<Sophus::SE3d>& poses) {
+bool read_poses(std::string path, std::vector<Sophus::SE3d>& poses) {
     std::ifstream file;
     file.open(path, std::ios::in | std::ios::binary);
     if (!file.is_open() || file.fail()) {
@@ -63,7 +62,7 @@ bool read_poses(std::filesystem::path path, std::vector<Sophus::SE3d>& poses) {
 }
 
 /* TODO: separate scales from landmarks */
-bool read_points_normals_gridscales(std::filesystem::path path, 
+bool read_points_normals_gridscales(std::string path,
                     std::vector<Eigen::Vector3d>& points,
                     std::vector<Eigen::Vector3d>& normals,
                     std::vector<double>& scales) {
@@ -92,7 +91,22 @@ bool read_points_normals_gridscales(std::filesystem::path path,
     return true;
 }
 
-bool read_visibility(std::filesystem::path path,
+bool write_points_normals(std::string path,
+                          std::vector<Eigen::Vector3d>& points,
+                          std::vector<Eigen::Vector3d>& normals) {
+    std::fstream file;
+    file.open(path, std::fstream::out);
+    for (int i = 0; i < std::min(points.size(), normals.size()); i++) {
+        file << points[i].transpose();
+        file << " ";
+        file << normals[i].transpose();
+        file << "\n";
+    }
+    file.close();
+    return true;
+}
+
+bool read_visibility(std::string path,
                      std::vector<std::vector<int>>& visibility) {
     std::ifstream file;
     file.open(path, std::ios::in | std::ios::binary);
@@ -113,7 +127,7 @@ bool read_visibility(std::filesystem::path path,
     return true;
 }
 
-bool read_landmarks(std::filesystem::path path,
+bool read_landmarks(std::string path,
                     std::vector<Eigen::Vector2d>& pixels,
                     std::vector<Eigen::Vector3d>& planes) {
     std::ifstream file;
@@ -144,7 +158,7 @@ bool read_landmarks(std::filesystem::path path,
     return true;
 }
 
-bool read_source_frame(std::filesystem::path path, 
+bool read_source_frame(std::string path,
                        std::vector<int>& source_idx) {
     std::ifstream grid_file;
     grid_file.open(path, std::ios::in | std::ios::binary);

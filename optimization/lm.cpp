@@ -32,13 +32,15 @@
 
 int main() {
     /* TODO: make static*/
-    std::filesystem::path camera_path{"../../../data/horse_workspace/preprocessing/camera.txt"};
-    std::filesystem::path pose_path{"../../../data/horse_workspace/preprocessing/poses.txt"};
-    std::filesystem::path image_path{"../../../data/horse_workspace/images/"};
-    std::filesystem::path landmark_path{"../../../data/horse_workspace/preprocessing/landmarks.txt"};
-    std::filesystem::path source_path{"../../../data/horse_workspace/preprocessing/source_views.txt"};
-    std::filesystem::path visibility_path{"../../../data/horse_workspace/preprocessing/visibility.txt"};
-    std::filesystem::path points3d_path{"../../../data/horse_workspace/preprocessing/points_normals_gridscales_select.txt"};
+    std::string camera_path{"../../../data/horse_workspace/preprocessing/camera.txt"};
+    std::string pose_path{"../../../data/horse_workspace/preprocessing/poses.txt"};
+    std::string image_path{"../../../data/horse_workspace/images/"};
+    std::string landmark_path{"../../../data/horse_workspace/preprocessing/landmarks.txt"};
+    std::string source_path{"../../../data/horse_workspace/preprocessing/source_views.txt"};
+    std::string visibility_path{"../../../data/horse_workspace/preprocessing/visibility.txt"};
+    std::string points3d_path{"../../../data/horse_workspace/preprocessing/points_normals_gridscales_select.txt"};
+    
+    std::string output_path{"../../../data/horse_workspace/optimization/points_normals.txt"};
     
     RadialCamera<double>::VecN camera_param;
     std::vector<Sophus::SE3d> poses;
