@@ -17,7 +17,7 @@ find_package(Sophus REQUIRED)
 message( STATUS "Sophus include directories: ${Sophus_INCLUDE_DIRS}" )
 message( STATUS "Sophus library directories: ${Sophus_LIBRARY_DIRS}" )
 message(STATUS "${Sophus_LIBRARIES}")
-include_directories("/home/alexander/apps/Sophus/sophus")
+include_directories(${Sophus_INCLUDE_DIRS})
 
 find_package(OpenCV 4.2.0 REQUIRED)
 include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS})
@@ -25,11 +25,11 @@ link_directories(${OpenCV_LIBRARY_DIRS})
 message(STATUS "OpenCV include directories: ${OpenCV_INCLUDE_DIRS}" )
 message(STATUS "OpenCV libraries ${OpenCV_LIBRARIES}")
 
-find_package(Open3D 0.12.0 REQUIRED)
-include_directories(SYSTEM ${Open3D_INCLUDE_DIRS})
-message(STATUS "Open3D include directories: ${Open3D_INCLUDE_DIRS}" )
-message(STATUS "Open3D libraries ${Open3D_LIBRARIES}")
-message(STATUS "Open3D library directories: ${Open3D_LIBRARY_DIRS}" )
+#find_package(Open3D 0.12.0 REQUIRED)
+#include_directories(SYSTEM ${Open3D_INCLUDE_DIRS})
+#message(STATUS "Open3D include directories: ${Open3D_INCLUDE_DIRS}" )
+#message(STATUS "Open3D libraries ${Open3D_LIBRARIES}")
+#message(STATUS "Open3D library directories: ${Open3D_LIBRARY_DIRS}" )
 
 if(OPENMP_FOUND)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -38,14 +38,19 @@ if(OPENMP_FOUND)
     message( STATUS "OpenMP found" )
 endif()
 
-set(PUBLIC_LIBRARIES Eigen3::Eigen Ceres::ceres  ${Sophus_LIBRARIES}  ${OpenCV_LIBRARIES} Open3D::Open3D)
 
-#add_library(Vis visualization.cpp)
-#target_link_libraries(Vis Eigen3::Eigen Open3D::Open3D)
+set(PUBLIC_LIBRARIES Eigen3::Eigen Ceres::ceres  ${Sophus_LIBRARIES}  ${OpenCV_LIBRARIES})
 
-#add_executable(robust_mean robust_mean.cpp)
-#target_link_libraries(robust_mean ${CERES_LIBRARIES} ${Sophus_LIBRARIES} ${EIGEN_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(robust_mean robust_mean.cpp)
+target_link_libraries(robust_mean ${CERES_LIBRARIES} ${Sophus_LIBRARIES} ${EIGEN_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(levenberg_marquardt lm.cpp)
 target_link_libraries(levenberg_marquardt ${PUBLIC_LIBRARIES})
-#target_link_directories(levenberg_marquardt PUBLIC ${OpenCV_LIBRARY_DIRS})
+
+
+
+
+
+
+
+

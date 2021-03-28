@@ -36,7 +36,8 @@ struct DistanceCostFunctor {
 struct PatchResidual {
     PatchResidual(double* source_patch, double* source_pixels, 
                   ceres::BiCubicInterpolator<ceres::Grid2D<double, 1>>* interpolator) : 
-        source_patch(source_patch), source_pixels(source_pixels), interpolator(interpolator) {}
+        source_patch(source_patch), source_pixels(source_pixels), 
+        interpolator(interpolator) {}
     
     template <typename T>
     bool operator() (const T* const spose_i, const T* const spose_j,
@@ -57,10 +58,11 @@ struct PatchResidual {
             Eigen::Matrix<T, 3, 1> x_bar{camera->unproject(p)};
             x_j.col(i) = camera->project(pose_ij * (x_bar / (plane.transpose() * x_bar)));
         }
-        
         Eigen::Matrix<T, 16, 1> patch_j;
         for (int i = 0; i < 16; i++) {
-            interpolator->Evaluate(x_j.col(i)[1] * T(scale), x_j.col(i)[0] * T(scale), &patch_j[i]);
+            patch_j[i] = T(0.);
+            interpolator->Evaluate((x_j.col(i)[1]), 
+                                   (x_j.col(i)[0]), &patch_j[i]);
         }
         T mu = T(0);
         for (int i = 0; i < 16; i++) {
@@ -77,7 +79,6 @@ struct PatchResidual {
         }
         return true;
     }
-    double scale = 0.5;
     Eigen::Map<Eigen::Matrix<double, 16, 1>> source_patch;
     Eigen::Map<Eigen::Matrix<double, 2, 16>> source_pixels;
     ceres::BiCubicInterpolator<ceres::Grid2D<double, 1>>* interpolator;
@@ -88,6 +89,7 @@ class Rho : public ceres::LossFunction {
 public:
     Rho(double tau=0.5) : tau_(tau) {}
     void Evaluate(double s, double out[3]) const {
+        
         out[0] = s / (s + tau_ * tau_);
         out[1] = tau_ * tau_ / ((s + tau_ * tau_) * (s + tau_ * tau_));
         out[2] = -2 * tau_ * tau_ / ((s + tau_ * tau_) * (s + tau_ * tau_) * (s + tau_ * tau_));

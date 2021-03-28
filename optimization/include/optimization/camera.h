@@ -36,8 +36,8 @@ class RadialCamera {
     Vec3 unproject(const Vec2& p) const {
         Vec3 res;
         Vec2 uncalibrated; /* TODO: rename */
-        uncalibrated[0] = 1. / param[0] * (p[0] - param[2]);
-        uncalibrated[1] = 1. / param[1] * (p[1] - param[3]);
+        uncalibrated[0] = (p[0] - param[2]) / param[0];
+        uncalibrated[1] = (p[1] - param[3]) / param[1];
         
         Scalar b1 = - param[4];
         Scalar b2 = 3. * param[4] * param[4] - param[5];

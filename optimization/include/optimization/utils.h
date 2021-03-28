@@ -19,17 +19,37 @@ Eigen::Matrix<T, 3, 1> unproject(Eigen::Matrix<T, 2, 1>& p,
 /* TODO: is p in camera frame */
 /* TODO: are we actually using this*/
 Eigen::Vector3d get_plane(Eigen::Vector3d p, Eigen::Vector3d normal) {
-    Eigen::Vector3d n{normal / normal[2]};
+    Eigen::Vector3d n{normal};
     double d = n.transpose().dot(p);
     n /= d;
     return n;
 }
 
-Eigen::Vector3d get_normal(Eigen::Vector3d p, Eigen::Vector3d plane) {
+// TODO: do this without 3d point???
+Eigen::Vector3d get_normal(Eigen::Vector3d p, Eigen::Vector3d plane, Sophus::SE3<double>& pose) {
     /* TODO: compute depth */
-    //double d = 
-    Eigen::Vector3d n{};
-    return n;
+    Eigen::Vector3d p_C = pose * p;
+    double d = p_C[2];
+    Eigen::Vector3d n{plane * d};
+    //n[2] = -n[2];
+    return (pose.rotationMatrix().inverse() * n).normalized();
+}
+
+Eigen::Matrix<double, 3, 16> create_grid(Eigen::Vector3d point, Eigen::Vector3d normal, double scale = 0.05) {
+    Eigen::Matrix<double, 3, 16> grid;
+    Eigen::Vector3d horizontal{-normal[2], 0., normal[0]};
+    Eigen::Vector3d vertical{normal.cross(horizontal)};
+    vertical.normalize();
+    horizontal.normalize();
+    int i = 0;
+    for (float y = -1.5; y <= 1.5; y += 1.) {
+        for(float x = -1.5; x <= 1.5; x += 1.) {
+            grid.col(i) = point + scale * x * horizontal + scale * y * vertical;
+            i++;
+        }
+    }
+    
+    return grid;
 }
 
 void get_camera_symbol(Sophus::SE3d pose, RadialCamera<double> camera,
