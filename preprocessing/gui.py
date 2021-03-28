@@ -3,6 +3,8 @@ import open3d as o3d
 import open3d.visualization.gui as gui
 import open3d.visualization.rendering as rendering
 
+import matplotlib.colors as pltcolors
+
 from utils import get_views_center
 from visualization import get_camera_symbols
 
@@ -186,6 +188,84 @@ class CropGui :
     def run(self):
         gui.Application.instance.run()
     
+ 
 
+class CloudGui :
+    def __init__(self, point_clouds, names) :
+        self.point_clouds = point_clouds
+        self.line_sets = []
+        self.names = names
+        self.color_selection = [pltcolors.to_rgb('tab:blue'), pltcolors.to_rgb('tab:orange'),
+                                pltcolors.to_rgb('tab:green'), pltcolors.to_rgb('tab:red')]
+        
+        # TODO create line set for normals
+        
+        self.normals = []
+        for i, cloud in enumerate(self.point_clouds) :
+            points2 = np.asarray(cloud.points) - np.asarray(cloud.normals) * 0.02
+            pointsline = np.concatenate([points2, np.asarray(cloud.points)], axis=0)
+            idx1 = np.arange(0, len(points2), 1)
+            idx2 = idx1 + len(points2)
+            lineidxs = np.concatenate([idx1.reshape(-1, 1), idx2.reshape(-1, 1)], 1)
+            
+            lineset = o3d.geometry.LineSet(o3d.utility.Vector3dVector(pointsline), 
+                                           o3d.utility.Vector2iVector(lineidxs))
+            
+            colors = np.array(self.color_selection[i]).reshape(1, -1).repeat(len(cloud.points), 0)
+            cloud.colors = o3d.utility.Vector3dVector(colors)
+            lineset.colors = cloud.colors
+            
+            self.line_sets = self.line_sets + [lineset]
+        
+        
+        gui.Application.instance.initialize()
+        self.window = gui.Application.instance.create_window("Landmark Selection", 1920, 1080)
+        
+        self.scene = gui.SceneWidget()
+        self.scene.scene = rendering.Open3DScene(self.window.renderer)
+        self.scene.scene.set_background([1, 1, 1, 1])
+        self.scene.scene.scene.enable_sun_light(True)
+        self.scene.visible = True
+        
+        self.mat = rendering.Material()
+        
+        self.check_boxes = []
+        for i, _ in enumerate(self.point_clouds) :
+            self.check_boxes = self.check_boxes + [gui.Checkbox(self.names[i])]
+        
+        self.options = gui.Vert()
+        for check_box in self.check_boxes :
+            self.options.add_child(check_box)
+
+        for i, check_box in enumerate(self.check_boxes) :
+            check_box.set_on_checked(self.Check(self, i))
+        
+        # Scene set-up
+        self.window.set_on_layout(self._on_layout)
+        self.window.add_child(self.scene)
+        self.window.add_child(self.options)
+        
+        bbox = o3d.geometry.AxisAlignedBoundingBox([-5, -5, -5],
+                                                   [5, 5, 5])
+        self.scene.setup_camera(60, bbox, [0, 0, 0])
     
+    class Check :
+        def __init__(self, gui, i) :
+            self.i = i
+            self.gui = gui
+        
+        def __call__(self, on) :
+            if on :
+                self.gui.scene.scene.add_geometry("cloud_"+str(self.i), self.gui.point_clouds[self.i], self.gui.mat)
+                self.gui.scene.scene.add_geometry("lines_"+str(self.i), self.gui.line_sets[self.i], self.gui.mat)
+            else :
+                self.gui.scene.scene.remove_geometry("cloud_"+str(self.i))
+                self.gui.scene.scene.remove_geometry("lines_"+str(self.i))
+
+    def _on_layout(self, theme) :
+        r = self.window.content_rect
+        self.scene.frame = gui.Rect(r.x, r.y, r.width-400, r.height)
+        self.options.frame = gui.Rect(r.width-400, r.y, 400, r.height)
     
+    def run(self):
+        gui.Application.instance.run()
