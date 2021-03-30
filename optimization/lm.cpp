@@ -3,6 +3,7 @@
 #include <vector>
 #include <chrono>
 #include <random>
+#include <filesystem>
 
 #include <eigen3/Eigen/Dense>
 #include <ceres/ceres.h>
@@ -258,10 +259,11 @@ int main(int argc, char **argv) {
     std::vector<std::vector<ceres::BiCubicInterpolator<ceres::Grid2D<double, 1>>>> interpolator_pyramids;
     /* TODO: reserve space in vectors */
     // Read images
+    int image_name_length = std::filesystem::directory_iterator(image_path)->path().filename().string().size() - 4;
     for (int i = 0; i < poses.size(); i++) {
         cv::Mat mat1;
         cv::Mat mat2;
-        std::string im_file = image_path + (std::string((6 - std::to_string(i+1).length()), '0') + std::to_string(i+1) + ".jpg");
+        std::string im_file = image_path + (std::string((image_name_length - std::to_string(i+1).length()), '0') + std::to_string(i+1) + ".jpg");
         
         images_color.push_back(cv::imread(im_file));
         
@@ -303,7 +305,7 @@ int main(int argc, char **argv) {
         while (abs(perturbation) > 0.01) {
             perturbation = distribution(generator);
         }
-        p_C[2] += perturbation;
+        p_C = p_C * ((p_C[2] + perturbation) / p_C[2]);
         planes_perturbed.push_back(
                     get_plane(p_C, 
                               poses[param_initial_perturbed.source_views[i]].rotationMatrix() * normals_init[i]));
