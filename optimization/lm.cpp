@@ -260,10 +260,11 @@ int main(int argc, char **argv) {
     /* TODO: reserve space in vectors */
     // Read images
     int image_name_length = std::filesystem::directory_iterator(image_path)->path().filename().string().size() - 4;
+    std::string extension = std::filesystem::directory_iterator(image_path)->path().filename().extension().string();
     for (int i = 0; i < poses.size(); i++) {
         cv::Mat mat1;
         cv::Mat mat2;
-        std::string im_file = image_path + (std::string((image_name_length - std::to_string(i+1).length()), '0') + std::to_string(i+1) + ".jpg");
+        std::string im_file = image_path + (std::string((image_name_length - std::to_string(i+1).length()), '0') + std::to_string(i+1) + extension);
         
         images_color.push_back(cv::imread(im_file));
         
