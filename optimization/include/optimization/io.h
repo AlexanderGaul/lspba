@@ -174,4 +174,29 @@ bool read_source_frame(std::string path,
     return true;
 }
 
+bool load_images(std::filesystem::path path, 
+                 std::vector<cv::Mat>& images_color) {
+    std::filesystem::directory_iterator directory_iterator(path);
+    std::set<std::filesystem::path> paths;
+    for (std::filesystem::directory_entry const & entry : directory_iterator) {
+        paths.insert(entry.path());
+    }
+    int i = -1;
+    for (std::filesystem::path path : paths) {
+        std::string extension = path.filename().extension().string();
+        if (extension != ".png" && extension != ".jpg") continue;
+        int j;
+        try {
+            j = std::stoi(path.filename().filename().string()); 
+        } catch (std::invalid_argument ex) {
+            continue;
+        }
+        if (j > i) {
+            images_color.push_back(cv::imread(path));
+            i = j;
+        }
+    }
+    return true;
+}
+
 #endif // IO_H
