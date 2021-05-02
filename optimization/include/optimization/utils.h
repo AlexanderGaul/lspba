@@ -1,23 +1,38 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <Eigen/Core>
+#include <eigen3/Eigen/Dense>
+#include <opencv2/opencv.hpp>
+#include <ceres/ceres.h>
+#include <ceres/cubic_interpolation.h>
+
 #include <sophus/se3.hpp>
+#include <basalt/image/image.h>
 
 #include <optimization/camera.h>
 
 template<typename T>
-Eigen::Matrix<T, 3, 1> unproject(Eigen::Matrix<T, 2, 1>& p, 
-                                 Eigen::Matrix<T, 3, 1>& plane,
-                                 RadialCamera<T>& camera,
-                                 Sophus::SE3<T>& pose) {
+Eigen::Matrix<T, 3, 1> unproject(Eigen::Matrix<T, 2, 1> const & p, 
+                                 Eigen::Matrix<T, 3, 1> const & plane,
+                                 RadialCamera<T> const & camera,
+                                 Sophus::SE3<T> const & pose) {
     Eigen::Matrix<T, 3, 1> x_bar{camera.unproject(p)};
     Eigen::Matrix<T, 3, 1> X{pose.inverse() * (x_bar / (plane.transpose() * x_bar))};
     return X;
 }
 
+template<typename T>
+Eigen::Matrix<T, 3, 1> unproject_camera(Eigen::Matrix<T, 2, 1> const & p, 
+                                        Eigen::Matrix<T, 3, 1> const & plane,
+                                        RadialCamera<T> camera) {
+    Eigen::Matrix<T, 3, 1> x_bar{camera.unproject(p)};
+    Eigen::Matrix<T, 3, 1> X{(x_bar / (plane.transpose() * x_bar))};
+    return X;
+}
+
 /* TODO: is p in camera frame */
 /* TODO: are we actually using this*/
+/* NOTE: THESE HAVE TO BE IN LOCAL COORDINATE SYSTEM */
 Eigen::Vector3d get_plane(Eigen::Vector3d p, Eigen::Vector3d normal) {
     Eigen::Vector3d n{normal};
     double d = n.transpose().dot(p);
@@ -26,19 +41,14 @@ Eigen::Vector3d get_plane(Eigen::Vector3d p, Eigen::Vector3d normal) {
 }
 
 // TODO: do this without 3d point???
-Eigen::Vector3d get_normal(Eigen::Vector3d p, Eigen::Vector3d plane, Sophus::SE3<double>& pose) {
-    /* TODO: compute depth */
-    Eigen::Vector3d p_C = pose * p;
-    double d = p_C[2];
-    Eigen::Vector3d n{plane * d};
-    //n[2] = -n[2];
-    return (pose.rotationMatrix().inverse() * n).normalized();
+Eigen::Vector3d get_normal(Eigen::Vector3d const plane, Sophus::SE3<double> const & pose) {
+    return (pose.rotationMatrix().inverse() * plane).normalized();
 }
 
 Eigen::Matrix<double, 3, 16> create_grid(Eigen::Vector3d point, Eigen::Vector3d normal, double scale = 0.05) {
     Eigen::Matrix<double, 3, 16> grid;
     Eigen::Vector3d horizontal{-normal[2], 0., normal[0]};
-    Eigen::Vector3d vertical{normal.cross(horizontal)};
+    Eigen::Vector3d vertical{normal.cross(horizontal.normalized())};
     vertical.normalize();
     horizontal.normalize();
     int i = 0;
@@ -132,5 +142,12 @@ void get_camera_symbol(Sophus::SE3d pose, RadialCamera<double> camera,
     
 }
 
+template<typename T>
+void print_std_vector(std::vector<T> vec) {
+    for (int i = 0; i < vec.size(); i++) {
+        std::cout << vec[i] << "\t";
+    }
+    std::cout << std::endl;
+}
 
 #endif // UTILS_H
