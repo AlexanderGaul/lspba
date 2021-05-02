@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories("${CMAKE_SOURCE_DIR}/include/")
 
-find_package(Eigen3 3.3.7 REQUIRED NO_MODULE)
+find_package(Eigen3 3.3.4 REQUIRED NO_MODULE)
 include_directories(${EIGEN3_INCLUDE_DIRS})
 message(STATUS "Eigen inlcude directories: ${EIGEN3_INCLUDE_DIRS}")
 
@@ -19,7 +19,7 @@ message( STATUS "Sophus library directories: ${Sophus_LIBRARY_DIRS}" )
 message(STATUS "${Sophus_LIBRARIES}")
 include_directories(${Sophus_INCLUDE_DIRS})
 
-find_package(OpenCV 4.2.0 REQUIRED)
+find_package(OpenCV REQUIRED)
 include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS})
 link_directories(${OpenCV_LIBRARY_DIRS})
 message(STATUS "OpenCV include directories: ${OpenCV_INCLUDE_DIRS}" )
@@ -39,10 +39,10 @@ if(OPENMP_FOUND)
 endif()
 include_directories("/home/alexander/apps/basalt-headers/include/")
 
-find_package(Python3 COMPONENTS Development NumPy REQUIRED)
-find_package(PythonInterp 3.8 REQUIRED)
+#find_package(Python3 COMPONENTS Development NumPy REQUIRED)
+#find_package(PythonInterp 3.8 REQUIRED)
 #find_package(PyhonLibs 3.8 REQUIRED)
-include_directories(${PYTHON_INCLUDE_DIRS})
+#include_directories(${PYTHON_INCLUDE_DIRS})
 
 set(PUBLIC_LIBRARIES Eigen3::Eigen Ceres::ceres  ${Sophus_LIBRARIES}  ${OpenCV_LIBRARIES})
 
@@ -51,8 +51,8 @@ set(PUBLIC_LIBRARIES Eigen3::Eigen Ceres::ceres  ${Sophus_LIBRARIES}  ${OpenCV_L
 
 add_executable(levenberg_marquardt lm.cpp)
 target_link_libraries(levenberg_marquardt ${PUBLIC_LIBRARIES})
-target_link_libraries(levenberg_marquardt Python3::Python Python3::NumPy)
-target_include_directories(levenberg_marquardt PRIVATE ${Python3_INCLUDE_DIRS} ${Python3_NumPy_INCLUDE_DIRS} ${PYTHON_LIBRARIES})
+#target_link_libraries(levenberg_marquardt Python3::Python Python3::NumPy)
+#target_include_directories(levenberg_marquardt PRIVATE ${Python3_INCLUDE_DIRS} ${Python3_NumPy_INCLUDE_DIRS} ${PYTHON_LIBRARIES})
 
 
 

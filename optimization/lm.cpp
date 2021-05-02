@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
     std::string preprocessing_folder = "preprocessing_low/";
     std::string preprocessing_path;
     std::string output_path;
-    int modulo_selection = 4;
+    int modulo_selection = 1;
     if (argc > 1) {
         workspace_path = argv[1];
     } 
@@ -204,6 +204,7 @@ int main(int argc, char **argv) {
     
     //std::cout << param_initial.get_points()[0].transpose() << std::endl;
     //std::cout << param_initial.get_normals()[0].transpose() << std::endl;
+    /*
     for (int i = 0; i < 200; i++) {
         if (i % 100 != 0) continue;
         //if (normal_error(param_optimize_perturbed.get_normal(i), {0., 0., 1.}) < 0.1) continue;
@@ -221,7 +222,7 @@ int main(int argc, char **argv) {
         plt::figure(6);
         plot_patches(param_optimize_perturbed, i);
         plt::show();
-    }
+    } */
     
     std::vector<Eigen::Vector3d> ps;
     std::vector<Eigen::Vector3d> ns;
